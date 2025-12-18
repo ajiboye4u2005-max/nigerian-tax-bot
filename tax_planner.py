@@ -8,8 +8,8 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 import asyncio
 
 # ============= CONFIGURATION =============
-BOT_TOKEN = os.environ.get('BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
-DATA_FILE = os.environ.get('DATA_FILE', 'users.json')
+BOT_TOKEN = '8354720859:AAEPMIuNMSwntpUwSw12C4fOL9m1PP1hy3w'  # Get from @BotFather
+DATA_FILE = 'users.json'
 
 # Verify bot token is set
 if BOT_TOKEN == 'YOUR_TELEGRAM_BOT_TOKEN_HERE':
