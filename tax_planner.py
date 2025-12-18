@@ -1,7 +1,5 @@
-# Nigerian Tax Deadlines Telegram Bot - Python Version
-# Based on Nigeria Tax Act 2025
-
 import os
+import sys
 import json
 import logging
 from datetime import datetime, timedelta
@@ -10,15 +8,23 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 import asyncio
 
 # ============= CONFIGURATION =============
-BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN_HERE'  # Get from @BotFather
-DATA_FILE = 'users.json'
+BOT_TOKEN = os.environ.get('BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
+DATA_FILE = os.environ.get('DATA_FILE', 'users.json')
+
+# Verify bot token is set
+if BOT_TOKEN == 'YOUR_TELEGRAM_BOT_TOKEN_HERE':
+    print("ERROR: BOT_TOKEN environment variable not set!")
+    sys.exit(1)
 
 # Setup logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.INFO,
+    stream=sys.stdout  # Important for Railway logs
 )
 logger = logging.getLogger(__name__)
+
+logger.info(f"Starting bot with token: {BOT_TOKEN[:10]}...")
 
 # ============= TAX DEADLINES DATA =============
 TAX_DEADLINES = {
@@ -484,35 +490,52 @@ async def check_deadlines(context: ContextTypes.DEFAULT_TYPE):
 # ============= MAIN =============
 
 def main():
+    logger.info("="*50)
     logger.info("Starting Nigerian Tax Deadlines Bot...")
+    logger.info(f"Python version: {sys.version}")
+    logger.info("="*50)
     
-    # Create application
-    application = Application.builder().token(BOT_TOKEN).build()
-    
-    # Add command handlers
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("deadlines", deadlines))
-    application.add_handler(CommandHandler("change", change_category))
-    application.add_handler(CommandHandler("test", test_reminders))
-    application.add_handler(CommandHandler("help", help_command))
-    
-    # Add callback handler
-    application.add_handler(CallbackQueryHandler(button_callback))
-    
-    # Schedule daily deadline check at 9 AM
-    job_queue = application.job_queue
-    
-    # Parse the time string properly
-    reminder_time = datetime.strptime("08:00", "%H:%M").time()
-    job_queue.run_daily(check_deadlines, time=reminder_time)
-    
-    logger.info(f"✅ Scheduled daily reminders at {reminder_time}")
-    logger.info("✅ Bot started successfully!")
-    logger.info("Send /start to your bot to begin.")
-    logger.info("Use /test to test reminders immediately.")
-    
-    # Run the bot
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    try:
+        # Create application
+        application = Application.builder().token(BOT_TOKEN).build()
+        logger.info("✓ Application created")
+        
+        # Add command handlers
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("deadlines", deadlines))
+        application.add_handler(CommandHandler("change", change_category))
+        application.add_handler(CommandHandler("test", test_reminders))
+        application.add_handler(CommandHandler("help", help_command))
+        logger.info("✓ Command handlers added")
+        
+        # Add callback handler
+        application.add_handler(CallbackQueryHandler(button_callback))
+        logger.info("✓ Callback handler added")
+        
+        # Schedule daily deadline check at 9 AM
+        job_queue = application.job_queue
+        if job_queue:
+            reminder_time = datetime.strptime("09:00", "%H:%M").time()
+            job_queue.run_daily(check_deadlines, time=reminder_time)
+            logger.info(f"✓ Scheduled daily reminders at {reminder_time}")
+        else:
+            logger.warning("! Job queue not available - reminders disabled")
+        
+        logger.info("="*50)
+        logger.info("✅ Bot started successfully!")
+        logger.info("Bot is now running and waiting for messages...")
+        logger.info("Use /test command to test reminders immediately")
+        logger.info("="*50)
+        
+        # Run the bot
+        application.run_polling(
+            allowed_updates=Update.ALL_TYPES,
+            drop_pending_updates=True
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Fatal error: {e}", exc_info=True)
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
