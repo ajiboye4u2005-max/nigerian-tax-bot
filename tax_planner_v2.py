@@ -10,7 +10,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 import asyncio
 
 # ============= CONFIGURATION =============
-BOT_TOKEN = '8354720859:AAEPMIuNMSwntpUwSw12C4fOL9m1PP1hy3w'  # Get from @BotFather
+BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN_HERE'  # Get from @BotFather
 DATA_FILE = 'users.json'
 
 # Setup logging
