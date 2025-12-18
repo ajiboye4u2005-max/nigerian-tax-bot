@@ -1,1 +1,1 @@
-worker: python tax_planner.py
+worker: python test_bot.py
